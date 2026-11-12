@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MAHJONG POINT — Score Counter (Meja 1–8)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            mp: {
+              green: '#0A472E',
+              greenDark: '#06311F',
+              greenLight: '#126342',
+              gold: '#A68358',
+              goldLight: '#C5A276',
+              goldDark: '#7D603D',
+              red: '#E61919',
+              redDark: '#B81010',
+              cream: '#FAF8F5',
+              sand: '#F2ECE3'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            serif: ['Cinzel', 'serif']
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    body {
+      background-color: #06311F;
+      background-image: radial-gradient(circle at 50% 0%, #0E583A 0%, #06311F 70%);
+      min-height: 100vh;
+    }
+    .gold-border {
+      border: 1.5px solid #A68358;
+    }
+    .gold-glow {
+      box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(166, 131, 88, 0.35);
+    }
+    /* Custom scrollbar for horizontal table strip on mobile */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="text-slate-900 antialiased selection:bg-mp-gold selection:text-white pb-16">
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- Top Header & Brand Identity -->
+  <header class="bg-mp-greenDark/95 border-b border-mp-gold/40 sticky top-0 z-30 backdrop-blur-md">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+      <!-- Logo + Brand Title -->
+      <div class="flex items-center gap-3">
+        <!-- Custom SVG matching uploaded MAHJONG POINT logo -->
+        <svg class="w-12 h-12 sm:w-14 sm:h-14 shrink-0 drop-shadow-md" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-label="Mahjong Point Logo">
+          <!-- Outer Dark Green Circle -->
+          <circle cx="100" cy="100" r="98" fill="#0A472E" stroke="#A68358" stroke-width="2" />
+          <!-- Inner Stepped / Castellated Bronze Ring -->
+          <g fill="none" stroke="#A68358" stroke-width="5.5" stroke-linejoin="miter">
+            <!-- Outer ring segments & castellated steps -->
+            <circle cx="100" cy="100" r="85" stroke-dasharray="18 14" stroke-dashoffset="9" />
+            <circle cx="100" cy="100" r="73" stroke-dasharray="18 14" stroke-dashoffset="25" />
+            <!-- Radial connectors creating the classic Chinese key/castellated pattern -->
+            <g stroke-width="5">
+              <line x1="100" y1="15" x2="100" y2="27" transform="rotate(14 100 100)" />
+              <line x1="100" y1="15" x2="100" y2="27" transform="rotate(42 100 100)" />
+              <line x1="100" y1="15" x2="100" y2="27" transform="rotate(70 100 100)" />
+              <line x1="100" y1="15" x2="100" y2="27" transform="rotate(98 100 100)" />
+              <line x1="100" y1="15" x2="100" y2="27" transform="rotate(126 100 100)" />
+              <line x1="100" y1="15" x2="100" y2="27" transform="rotate(154 100 100)" />
+              <line x1="100" y1="15" x2="100" y2="27" transform="rotate(182 100 100)" />
+              <line x1="100" y1="15" x2="100" y2="27" transform="rotate(210 100 100)" />
+              <line x1="100" y1="15" x2="100" y2="27" transform="rotate(238 100 100)" />
+              <line x1="100" y1="15" x2="100" y2="27" transform="rotate(266 100 100)" />
+              <line x1="100" y1="15" x2="100" y2="27" transform="rotate(294 100 100)" />
+              <line x1="100" y1="15" x2="100" y2="27" transform="rotate(322 100 100)" />
+              <line x1="100" y1="15" x2="100" y2="27" transform="rotate(350 100 100)" />
+            </g>
+          </g>
+          <!-- Red Location Pin Icon in Upper Center -->
+          <path d="M100 38 C87.5 38 78 47.5 78 59.5 C78 74.5 96.5 92.5 98.5 94.3 C99.4 95.1 100.6 95.1 101.5 94.3 C103.5 92.5 122 74.5 122 59.5 C122 47.5 112.5 38 100 38 Z" fill="#E61919" />
+          <circle cx="100" cy="59.5" r="8.5" fill="#0A472E" />
+          <!-- White Serif Text: MAHJONG POINT -->
+          <text x="100" y="121" text-anchor="middle" fill="#FFFFFF" font-family="Cinzel, Georgia, serif" font-weight="700" font-size="22.5" letter-spacing="1.2">MAHJONG</text>
+          <text x="100" y="147" text-anchor="middle" fill="#FFFFFF" font-family="Cinzel, Georgia, serif" font-weight="700" font-size="22.5" letter-spacing="2">POINT</text>
+        </svg>
+
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="font-serif text-lg sm:text-xl font-bold tracking-wider text-white">MAHJONG POINT</h1>
+            <span class="hidden sm:inline-block px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wider bg-mp-gold/20 text-mp-goldLight border border-mp-gold/40 rounded-full">Official Counter</span>
+          </div>
+          <p class="text-xs text-emerald-200/80">Sistem Pencatat Skor Turnamen & Parlor</p>
+        </div>
+      </div>
+
+      <!-- Quick Top Controls -->
+      <div class="flex items-center gap-2">
+        <button onclick="openSettingsModal()" class="px-3 py-2 rounded-xl bg-mp-green hover:bg-mp-greenLight text-white border border-mp-gold/50 text-xs sm:text-sm font-semibold flex items-center gap-1.5 transition active:scale-95">
+          <svg class="w-4 h-4 text-mp-goldLight" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          <span>Pengaturan Meja</span>
+        </button>
+
+        <button onclick="openSummaryModal()" class="px-3 py-2 rounded-xl bg-mp-gold hover:bg-mp-goldLight text-mp-greenDark text-xs sm:text-sm font-bold flex items-center gap-1.5 shadow transition active:scale-95">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+          <span>Hasil Akhir</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- TABLE SELECTOR BAR (MEJA 1 - 8) -->
+    <div class="bg-mp-green/90 border-t border-mp-gold/30">
+      <div class="max-w-6xl mx-auto px-4 py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div class="flex items-center justify-between sm:justify-start gap-2">
+          <span class="text-xs font-bold uppercase tracking-wider text-mp-goldLight flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-mp-red animate-pulse"></span>
+            Pilih Meja:
+          </span>
+          <!-- Mobile dropdown alternative + status -->
+          <select id="mobileTableSelect" onchange="switchTable(Number(this.value))" class="sm:hidden bg-mp-greenDark text-white text-xs font-bold border border-mp-gold/60 rounded-lg px-2.5 py-1.5 focus:outline-none">
+            <option value="1">Meja 1</option>
+            <option value="2">Meja 2</option>
+            <option value="3">Meja 3</option>
+            <option value="4">Meja 4</option>
+            <option value="5">Meja 5</option>
+            <option value="6">Meja 6</option>
+            <option value="7">Meja 7</option>
+            <option value="8">Meja 8</option>
+          </select>
+        </div>
+
+        <!-- Desktop/Tablet Pill Buttons for Meja 1 - 8 -->
+        <div id="tableTabsContainer" class="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+          <!-- Populated dynamically via JS -->
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Workspace -->
+  <main class="max-w-6xl mx-auto px-4 pt-5 space-y-5">
+
+    <!-- Current Table Banner & Match Status Bar -->
+    <section class="bg-mp-cream rounded-2xl gold-border gold-glow p-4 sm:p-5">
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <!-- Left: Active Table Identity, Round Info & Minimal Tay Box -->
+        <div class="flex flex-wrap items-center gap-3 sm:gap-4">
+          <div class="bg-mp-green text-white px-4 py-2.5 rounded-xl border border-mp-gold flex items-center gap-2.5 shadow-sm">
+            <span class="w-2.5 h-2.5 rounded-full bg-mp-red"></span>
+            <div>
+              <div class="text-[10px] uppercase tracking-widest text-mp-goldLight font-semibold">Aktif Sekarang</div>
+              <div id="activeTableTitle" class="font-serif text-lg sm:text-xl font-bold leading-tight">MEJA 1</div>
+            </div>
+          </div>
+
+          <!-- Round & Wind Selector Controls -->
+          <div class="flex flex-wrap items-center gap-2 bg-mp-sand px-3.5 py-2 rounded-xl border border-mp-gold/40">
+            <div>
+              <span class="block text-[10px] font-bold uppercase tracking-wider text-mp-goldDark">Babak / Angin</span>
+              <div class="flex items-center gap-1.5 mt-0.5">
+                <button onclick="prevRound()" title="Mundur 1 Babak" class="w-7 h-7 rounded-lg bg-white hover:bg-mp-gold/20 border border-mp-gold/40 flex items-center justify-center text-mp-green font-bold text-sm transition">‹</button>
+                <span id="roundDisplay" class="font-bold text-mp-green text-sm sm:text-base min-w-[110px] text-center">Timur 1 (East 1)</span>
+                <button onclick="nextRound()" title="Maju 1 Babak" class="w-7 h-7 rounded-lg bg-white hover:bg-mp-gold/20 border border-mp-gold/40 flex items-center justify-center text-mp-green font-bold text-sm transition">›</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Minimal Tay untuk Hu Box -->
+          <div class="bg-mp-sand px-3.5 py-2 rounded-xl border border-mp-gold/60 shadow-sm">
+            <span class="block text-[10px] font-bold uppercase tracking-wider text-mp-red">Minimal Tay untuk Hu</span>
+            <div class="flex items-center gap-1.5 mt-0.5">
+              <button onclick="adjustMinTay(-1)" title="Kurangi Minimal Tay" class="w-7 h-7 rounded-lg bg-white hover:bg-red-50 border border-mp-gold/50 flex items-center justify-center text-mp-red font-extrabold text-base transition active:scale-95">-</button>
+              <div class="flex items-center bg-white border border-mp-gold/50 rounded-lg px-2 py-0.5">
+                <input
+                  type="number"
+                  id="minTayInput"
+                  min="0"
+                  value="5"
+                  onchange="setMinTay(this.value)"
+                  aria-label="Minimal Tay untuk Hu"
+                  class="w-10 text-center font-extrabold text-mp-green text-sm sm:text-base focus:outline-none"
+                />
+                <span class="text-[11px] font-bold text-mp-goldDark ml-0.5">Tay</span>
+              </div>
+              <button onclick="adjustMinTay(1)" title="Tambah Minimal Tay" class="w-7 h-7 rounded-lg bg-white hover:bg-emerald-50 border border-mp-gold/50 flex items-center justify-center text-mp-green font-extrabold text-base transition active:scale-95">+</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Primary Action Buttons -->
+        <div class="flex flex-wrap items-center gap-2.5">
+          <button onclick="openHandModal()" class="flex-1 sm:flex-none px-5 py-3 rounded-xl bg-mp-red hover:bg-mp-redDark text-white font-bold text-sm shadow-md flex items-center justify-center gap-2 transition active:scale-95">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+            <span>Catat Ronde / Input Skor</span>
+          </button>
+
+          <button onclick="undoLastRound()" id="undoBtn" class="px-3.5 py-3 rounded-xl bg-white hover:bg-mp-sand text-mp-green border border-mp-gold/60 font-semibold text-xs sm:text-sm flex items-center gap-1.5 transition disabled:opacity-40 disabled:cursor-not-allowed" title="Batalkan ronde terakhir">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
+            <span>Undo</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Total Points Balance Check Bar -->
+      <div class="mt-3 pt-3 border-t border-mp-gold/25 flex flex-wrap items-center justify-between gap-2 text-xs">
+        <div class="flex items-center gap-2 text-slate-600">
+          <span class="font-semibold text-mp-green">Info Meja:</span>
+          <span id="ruleSummaryText" class="bg-white px-2.5 py-0.5 rounded-md border border-mp-gold/30 font-medium">Poin Awal: 100 • Syarat Hu: Min 5 Tay</span>
+        </div>
+        <div id="totalPointsCheck" class="font-semibold">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+    </section>
+
+    <!-- 4 Player Score Cards Grid -->
+    <section aria-label="Papan Skor Pemain">
+      <div id="playersGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Rendered dynamically by JS -->
+      </div>
+    </section>
+
+    <!-- Round History & Quick Actions -->
+    <section class="bg-mp-cream rounded-2xl gold-border gold-glow overflow-hidden">
+      <div class="bg-mp-green px-5 py-3.5 flex flex-wrap items-center justify-between gap-2 border-b border-mp-gold/50">
+        <div class="flex items-center gap-2">
+          <svg class="w-5 h-5 text-mp-goldLight" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <h2 class="font-serif font-bold text-white text-base tracking-wide">RIWAYAT RONDE — <span id="historyTableLabel" class="text-mp-goldLight">MEJA 1</span></h2>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="copySummaryToClipboard()" class="px-3 py-1.5 rounded-lg bg-mp-gold hover:bg-mp-goldLight text-mp-greenDark text-xs font-bold flex items-center gap-1.5 transition">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+            <span>Salin Hasil</span>
+          </button>
+          <button onclick="openResetConfirmModal()" class="px-3 py-1.5 rounded-lg bg-mp-red/90 hover:bg-mp-red text-white text-xs font-bold flex items-center gap-1 transition">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            <span>Reset Meja</span>
+          </button>
+        </div>
+      </div>
+
+      <div id="historyContainer" class="p-4 sm:p-5 max-h-[380px] overflow-y-auto">
+        <!-- History rows rendered via JS -->
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ========================================================= -->
+  <!-- MODAL 1: RECORD HAND / INPUT SKOR RONDE                   -->
+  <!-- ========================================================= -->
+  <div id="handModal" class="fixed inset-0 z-40 hidden bg-black/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+    <div class="bg-mp-cream w-full max-w-xl rounded-2xl gold-border shadow-2xl overflow-hidden my-auto">
+      <!-- Modal Header -->
+      <div class="bg-mp-green px-5 py-4 flex items-center justify-between border-b border-mp-gold">
+        <div>
+          <span id="modalTableBadge" class="text-[11px] font-bold uppercase tracking-widest text-mp-goldLight">MEJA 1 • TIMUR 1</span>
+          <h3 class="font-serif text-lg font-bold text-white">Catat Hasil Ronde</h3>
+        </div>
+        <button onclick="closeHandModal()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center font-bold">✕</button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="p-5 space-y-4 max-h-[80vh] overflow-y-auto">
+        <!-- Step 1: Outcome Type -->
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-mp-green mb-2">Jenis Hasil Ronde</label>
+          <div class="grid grid-cols-3 gap-2">
+            <button type="button" onclick="setHandType('ron')" id="typeBtn_ron" class="hand-type-btn py-2.5 px-2 rounded-xl border-2 font-bold text-xs sm:text-sm text-center transition">
+              🎯 Hu Buangan
+            </button>
+            <button type="button" onclick="setHandType('tsumo')" id="typeBtn_tsumo" class="hand-type-btn py-2.5 px-2 rounded-xl border-2 font-bold text-xs sm:text-sm text-center transition">
+              🀄 Hu Sendiri
+            </button>
+            <button type="button" onclick="setHandType('transfer')" id="typeBtn_transfer" class="hand-type-btn py-2.5 px-2 rounded-xl border-2 font-bold text-xs sm:text-sm text-center transition">
+              ⇄ Transfer / Penalti
+            </button>
+          </div>
+        </div>
+
+        <!-- Dynamic Fields for HU BUANGAN (RON) / HU SENDIRI (TSUMO) -->
+        <div id="winFieldsSection" class="space-y-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <!-- Winner Select -->
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Pemenang (Hu)</label>
+              <select id="winnerSelect" onchange="updateCalculatedPointsPreview()" class="w-full rounded-xl border border-mp-gold/60 bg-white px-3 py-2.5 text-sm font-semibold text-mp-green focus:outline-none focus:ring-2 focus:ring-mp-gold">
+              </select>
+            </div>
+
+            <!-- Loser Select (Only for Hu Buangan) -->
+            <div id="loserSelectGroup">
+              <label class="block text-xs font-bold text-slate-700 mb-1">Yang Membuang (Kalah)</label>
+              <select id="loserSelect" onchange="updateCalculatedPointsPreview()" class="w-full rounded-xl border border-mp-gold/60 bg-white px-3 py-2.5 text-sm font-semibold text-mp-red focus:outline-none focus:ring-2 focus:ring-mp-gold">
+              </select>
+            </div>
+          </div>
+
+          <!-- Simple Point Entry Box -->
+          <div class="bg-mp-sand p-3.5 rounded-xl border border-mp-gold/40 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold uppercase tracking-wider text-mp-green">Input Poin Kemenangan</span>
+              <span id="modalMinTayReminder" class="text-[11px] font-bold bg-white text-mp-red px-2 py-0.5 rounded border border-mp-gold/40">Syarat Minimal: 5 Tay</span>
+            </div>
+
+            <!-- Tay Count (Optional Note / Validation) & Direct Points -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-600 mb-1">Jumlah Tay Tangan</label>
+                <input type="number" id="handTayInput" min="0" value="5" oninput="updateCalculatedPointsPreview()" class="w-full rounded-lg border border-mp-gold/60 bg-white px-3 py-2 text-sm font-bold text-mp-green" />
+              </div>
+
+              <!-- For Hu Buangan: Total points paid by loser -->
+              <div id="ronPointsInputGroup">
+                <label class="block text-[11px] font-semibold text-slate-600 mb-1">Poin Dibayar Yang Kalah</label>
+                <input type="number" id="ronPointsInput" step="1" value="10" oninput="updateCalculatedPointsPreview()" class="w-full rounded-lg border border-mp-gold/60 bg-white px-3 py-2 text-sm font-bold text-mp-green" />
+              </div>
+
+              <!-- For Hu Sendiri: Points paid by EACH of the 3 other players -->
+              <div id="tsumoPointsInputGroup" class="hidden">
+                <label class="block text-[11px] font-semibold text-slate-600 mb-1">Poin Dibayar Masing-Masing (×3)</label>
+                <input type="number" id="tsumoEachPointsInput" step="1" value="10" oninput="updateCalculatedPointsPreview()" class="w-full rounded-lg border border-mp-gold/60 bg-white px-3 py-2 text-sm font-bold text-mp-green" />
+              </div>
+            </div>
+
+            <!-- Live Calculation Breakdown Preview -->
+            <div id="scorePreviewBox" class="bg-white rounded-lg p-3 border border-mp-gold/40 text-xs space-y-1">
+              <!-- Populated dynamically -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Dynamic Fields for DIRECT TRANSFER / PENALTY -->
+        <div id="transferFieldsSection" class="hidden space-y-3 bg-mp-sand p-3.5 rounded-xl border border-mp-gold/40">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Dari Pemain (Pembayar)</label>
+              <select id="transferFromSelect" class="w-full rounded-xl border border-mp-gold/60 bg-white px-3 py-2 text-sm font-semibold"></select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Ke Pemain (Penerima)</label>
+              <select id="transferToSelect" class="w-full rounded-xl border border-mp-gold/60 bg-white px-3 py-2 text-sm font-semibold"></select>
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Jumlah Poin</label>
+            <input type="number" id="transferAmountInput" step="1" value="10" class="w-full rounded-xl border border-mp-gold/60 bg-white px-3 py-2 text-sm font-bold text-mp-green" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Catatan (Opsional)</label>
+            <input type="text" id="transferNoteInput" placeholder="Contoh: Penalti / Koreksi poin" class="w-full rounded-xl border border-mp-gold/60 bg-white px-3 py-2 text-sm" />
+          </div>
+        </div>
+
+        <!-- Auto Advance Round Option -->
+        <div class="flex items-center justify-between bg-white px-3.5 py-2.5 rounded-xl border border-mp-gold/40">
+          <div>
+            <span class="text-xs font-bold text-mp-green block">Otomatis Lanjut Babak & Giliran Dealer</span>
+            <span class="text-[11px] text-slate-500">Dealer tetap jika Dealer menang; geser angin jika pemain lain menang.</span>
+          </div>
+          <input type="checkbox" id="autoAdvanceCheck" checked class="w-5 h-5 accent-mp-green rounded cursor-pointer" />
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="bg-mp-sand px-5 py-3.5 border-t border-mp-gold/40 flex items-center justify-end gap-2.5">
+        <button type="button" onclick="closeHandModal()" class="px-4 py-2.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 font-semibold text-sm border border-slate-300 transition">Batal</button>
+        <button type="button" onclick="submitHandResult()" class="px-5 py-2.5 rounded-xl bg-mp-green hover:bg-mp-greenLight text-white font-bold text-sm shadow transition active:scale-95">Simpan Skor Ronde</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- MODAL 2: TABLE & PLAYER SETTINGS                          -->
+  <!-- ========================================================= -->
+  <div id="settingsModal" class="fixed inset-0 z-40 hidden bg-black/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+    <div class="bg-mp-cream w-full max-w-lg rounded-2xl gold-border shadow-2xl overflow-hidden my-auto">
+      <div class="bg-mp-green px-5 py-4 flex items-center justify-between border-b border-mp-gold">
+        <div>
+          <span id="settingsTableBadge" class="text-[11px] font-bold uppercase tracking-widest text-mp-goldLight">KONFIGURASI MEJA 1</span>
+          <h3 class="font-serif text-lg font-bold text-white">Pengaturan Pemain & Poin Awal</h3>
+        </div>
+        <button onclick="closeSettingsModal()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center font-bold">✕</button>
+      </div>
+
+      <div class="p-5 space-y-4 max-h-[80vh] overflow-y-auto">
+        <!-- General Starting Points Input (Applies to all 4 players) -->
+        <div class="bg-mp-sand p-3.5 rounded-xl border border-mp-gold/50">
+          <label for="setGeneralStartScore" class="block text-xs font-bold uppercase tracking-wider text-mp-green mb-1">Poin Awal (Semua Pemain)</label>
+          <p class="text-[11px] text-slate-600 mb-2">Berlaku sama rata untuk keempat pemain saat mulai atau reset meja.</p>
+          <input
+            type="number"
+            id="setGeneralStartScore"
+            placeholder="Contoh: 100 atau 500"
+            class="w-full rounded-xl border border-mp-gold/60 bg-white px-3.5 py-2.5 text-base font-extrabold text-mp-green focus:outline-none focus:ring-2 focus:ring-mp-gold"
+          />
+        </div>
+
+        <!-- Player Names (Clean & Simple) -->
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-mp-green mb-2">Nama Pemain</label>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <div class="bg-white p-3 rounded-xl border border-mp-gold/50">
+              <span class="text-[11px] font-bold text-mp-red block mb-1">東 TIMUR (EAST)</span>
+              <input type="text" id="setPlayer0" placeholder="Nama Pemain 1" class="w-full text-sm font-bold text-slate-800 border-b border-slate-200 focus:border-mp-green focus:outline-none pb-1" />
+            </div>
+
+            <div class="bg-white p-3 rounded-xl border border-mp-gold/50">
+              <span class="text-[11px] font-bold text-mp-green block mb-1">南 SELATAN (SOUTH)</span>
+              <input type="text" id="setPlayer1" placeholder="Nama Pemain 2" class="w-full text-sm font-bold text-slate-800 border-b border-slate-200 focus:border-mp-green focus:outline-none pb-1" />
+            </div>
+
+            <div class="bg-white p-3 rounded-xl border border-mp-gold/50">
+              <span class="text-[11px] font-bold text-mp-green block mb-1">西 BARAT (WEST)</span>
+              <input type="text" id="setPlayer2" placeholder="Nama Pemain 3" class="w-full text-sm font-bold text-slate-800 border-b border-slate-200 focus:border-mp-green focus:outline-none pb-1" />
+            </div>
+
+            <div class="bg-white p-3 rounded-xl border border-mp-gold/50">
+              <span class="text-[11px] font-bold text-mp-green block mb-1">北 UTARA (NORTH)</span>
+              <input type="text" id="setPlayer3" placeholder="Nama Pemain 4" class="w-full text-sm font-bold text-slate-800 border-b border-slate-200 focus:border-mp-green focus:outline-none pb-1" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Manual Dealer Selection -->
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Dealer (Bandar) Saat Ini</label>
+          <select id="setDealerIndex" class="w-full rounded-xl border border-mp-gold/60 bg-white px-3 py-2.5 text-sm font-semibold text-slate-800">
+          </select>
+        </div>
+
+        <div class="bg-amber-50 border border-amber-300 rounded-xl p-3 text-xs text-amber-900 flex items-start gap-2">
+          <input type="checkbox" id="resetScoresOnSaveCheck" class="mt-0.5 w-4 h-4 accent-mp-green" />
+          <label for="resetScoresOnSaveCheck" class="cursor-pointer">
+            <strong>Sekaligus reset skor aktif ke poin awal di atas</strong> (centang jika memulai sesi baru dengan poin awal tersebut).
+          </label>
+        </div>
+      </div>
+
+      <div class="bg-mp-sand px-5 py-3.5 border-t border-mp-gold/40 flex items-center justify-end gap-2.5">
+        <button type="button" onclick="closeSettingsModal()" class="px-4 py-2 rounded-xl bg-white text-slate-700 font-semibold text-sm border border-slate-300">Batal</button>
+        <button type="button" onclick="saveTableSettings()" class="px-5 py-2 rounded-xl bg-mp-green hover:bg-mp-greenLight text-white font-bold text-sm shadow">Simpan Pengaturan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- MODAL 3: FINAL STANDINGS / SUMMARY                        -->
+  <!-- ========================================================= -->
+  <div id="summaryModal" class="fixed inset-0 z-40 hidden bg-black/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+    <div class="bg-mp-cream w-full max-w-xl rounded-2xl gold-border shadow-2xl overflow-hidden my-auto">
+      <div class="bg-mp-green px-5 py-4 flex items-center justify-between border-b border-mp-gold">
+        <div>
+          <span id="summaryTableBadge" class="text-[11px] font-bold uppercase tracking-widest text-mp-goldLight">KLASEMEN AKHIR • MEJA 1</span>
+          <h3 class="font-serif text-lg font-bold text-white">Rekapitulasi & Peringkat</h3>
+        </div>
+        <button onclick="closeSummaryModal()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center font-bold">✕</button>
+      </div>
+
+      <div class="p-5 space-y-4">
+        <div id="standingsTableContainer" class="overflow-x-auto">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+
+      <div class="bg-mp-sand px-5 py-3.5 border-t border-mp-gold/40 flex flex-wrap items-center justify-between gap-2">
+        <button type="button" onclick="copySummaryToClipboard()" class="px-4 py-2.5 rounded-xl bg-mp-gold hover:bg-mp-goldLight text-mp-greenDark font-bold text-sm flex items-center gap-2 shadow-sm transition">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+          <span>Salin Hasil ke Clipboard</span>
+        </button>
+        <button type="button" onclick="closeSummaryModal()" class="px-4 py-2.5 rounded-xl bg-mp-green text-white font-semibold text-sm">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- MODAL 4: RESET CONFIRMATION (Custom, No browser confirm)  -->
+  <!-- ========================================================= -->
+  <div id="resetConfirmModal" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-mp-cream w-full max-w-sm rounded-2xl gold-border shadow-2xl p-5 space-y-4 text-center">
+      <div class="w-12 h-12 rounded-full bg-mp-red/15 text-mp-red mx-auto flex items-center justify-center font-bold text-2xl">!</div>
+      <div>
+        <h3 class="font-serif text-lg font-bold text-mp-green">Reset <span id="resetModalTableName">Meja 1</span>?</h3>
+        <p class="text-xs text-slate-600 mt-1">Semua skor, babak, dan riwayat ronde pada meja ini akan dikembalikan ke poin awal (<strong id="resetModalStartScore" class="text-mp-green">100</strong> poin). Meja lain tidak terpengaruh.</p>
+      </div>
+      <div class="flex items-center justify-center gap-2.5 pt-2">
+        <button onclick="closeResetConfirmModal()" class="flex-1 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-700 font-semibold text-sm">Batal</button>
+        <button onclick="confirmResetTable()" class="flex-1 py-2.5 rounded-xl bg-mp-red hover:bg-mp-redDark text-white font-bold text-sm">Ya, Reset</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // =========================================================================
+    // DATA & STATE MANAGEMENT (8 INDEPENDENT TABLES)
+    // =========================================================================
+    const STORAGE_KEY = 'mahjong_point_tables_v2';
+    const ACTIVE_TABLE_KEY = 'mahjong_point_active_table_v2';
+
+    const WINDS = [
+      { id: 0, kanji: '東', labelId: 'Timur', labelEn: 'East' },
+      { id: 1, kanji: '南', labelId: 'Selatan', labelEn: 'South' },
+      { id: 2, kanji: '西', labelId: 'Barat', labelEn: 'West' },
+      { id: 3, kanji: '北', labelId: 'Utara', labelEn: 'North' }
+    ];
+
+    function createDefaultTableState(tableNumber) {
+      return {
+        tableNumber,
+        startScore: 100,   // General starting points for all 4 players
+        minTay: 5,         // Minimal Tay untuk Hu (default 5 poin)
+        roundWind: 0,      // 0: East, 1: South, 2: West, 3: North
+        roundNumber: 1,    // 1..4
+        dealerIndex: 0,    // 0..3 (which seat is currently Dealer)
+        players: [
+          { name: 'Pemain 1', score: 100 },
+          { name: 'Pemain 2', score: 100 },
+          { name: 'Pemain 3', score: 100 },
+          { name: 'Pemain 4', score: 100 }
+        ],
+        history: []
+      };
+    }
+
+    let tablesState = {};
+    let activeTableId = 1;
+
+    function loadState() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          tablesState = JSON.parse(saved);
+        }
+      } catch (e) {
+        console.warn('Gagal memuat localStorage:', e);
+      }
+      for (let i = 1; i <= 8; i++) {
+        if (!tablesState[i]) {
+          tablesState[i] = createDefaultTableState(i);
+        }
+        if (typeof tablesState[i].minTay !== 'number') {
+          tablesState[i].minTay = 5;
+        }
+        if (typeof tablesState[i].startScore !== 'number') {
+          const fallbackStart = typeof tablesState[i].players?.[0]?.startScore === 'number'
+            ? tablesState[i].players[0].startScore
+            : 100;
+          tablesState[i].startScore = fallbackStart;
+        }
+      }
+      const savedActive = Number(localStorage.getItem(ACTIVE_TABLE_KEY));
+      if (savedActive >= 1 && savedActive <= 8) {
+        activeTableId = savedActive;
+      }
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(tablesState));
+        localStorage.setItem(ACTIVE_TABLE_KEY, String(activeTableId));
+      } catch (e) {
+        console.warn('Gagal menyimpan localStorage:', e);
+      }
+    }
+
+    function getCurrentTable() {
+      return tablesState[activeTableId];
+    }
+
+    function getSeatWindForPlayer(table, playerIdx) {
+      const relativeSeat = (playerIdx - table.dealerIndex + 4) % 4;
+      return WINDS[relativeSeat];
+    }
+
+    function formatNumber(num) {
+      return Number(num).toLocaleString('id-ID');
+    }
+
+    function formatDiff(diff) {
+      if (diff > 0) return `+${formatNumber(diff)}`;
+      if (diff < 0) return `${formatNumber(diff)}`;
+      return '0';
+    }
+
+    // =========================================================================
+    // MAIN UI RENDERING
+    // =========================================================================
+    function renderAll() {
+      const table = getCurrentTable();
+
+      // Sync Mobile Dropdown
+      document.getElementById('mobileTableSelect').value = String(activeTableId);
+
+      // Render Table 1-8 Pills
+      const tabsContainer = document.getElementById('tableTabsContainer');
+      let tabsHtml = '';
+      for (let i = 1; i <= 8; i++) {
+        const isActive = i === activeTableId;
+        const hasActivity = tablesState[i].history.length > 0;
+        tabsHtml += `
+          <button
+            onclick="switchTable(${i})"
+            class="px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition flex items-center gap-1.5 ${
+              isActive
+                ? 'bg-mp-gold text-mp-greenDark shadow-sm ring-2 ring-white/40'
+                : 'bg-mp-greenDark/70 hover:bg-mp-greenDark text-white/90 border border-mp-gold/30'
+            }"
+          >
+            <span>Meja ${i}</span>
+            ${hasActivity ? `<span class="w-1.5 h-1.5 rounded-full ${isActive ? 'bg-mp-red' : 'bg-mp-goldLight'}"></span>` : ''}
+          </button>
+        `;
+      }
+      tabsContainer.innerHTML = tabsHtml;
+
+      // Update Table Labels
+      document.getElementById('activeTableTitle').textContent = `MEJA ${activeTableId}`;
+      document.getElementById('historyTableLabel').textContent = `MEJA ${activeTableId}`;
+
+      // Round & Wind Display
+      const windObj = WINDS[table.roundWind];
+      document.getElementById('roundDisplay').textContent = `${windObj.labelId} ${table.roundNumber} (${windObj.labelEn} ${table.roundNumber})`;
+
+      // Minimal Tay Box
+      document.getElementById('minTayInput').value = table.minTay;
+      document.getElementById('ruleSummaryText').textContent = `Poin Awal: ${formatNumber(table.startScore)} • Syarat Hu: Min ${table.minTay} Tay`;
+
+      // Balance check (Sum of current scores vs 4 * general startScore)
+      const currentSum = table.players.reduce((acc, p) => acc + p.score, 0);
+      const expectedSum = table.startScore * 4;
+      const balanceEl = document.getElementById('totalPointsCheck');
+      if (currentSum === expectedSum) {
+        balanceEl.innerHTML = `<span class="text-emerald-700 bg-emerald-100 px-2.5 py-0.5 rounded-md border border-emerald-300">✓ Total Poin Seimbang: ${formatNumber(currentSum)}</span>`;
+      } else {
+        const delta = currentSum - expectedSum;
+        balanceEl.innerHTML = `<span class="text-mp-red bg-red-100 px-2.5 py-0.5 rounded-md border border-red-300">⚠ Selisih Total: ${formatDiff(delta)} pts</span>`;
+      }
+
+      // Undo button state
+      document.getElementById('undoBtn').disabled = table.history.length === 0;
+
+      // Render 4 Player Cards
+      renderPlayerCards(table);
+
+      // Render History
+      renderHistory(table);
+    }
+
+    function renderPlayerCards(table) {
+      const grid = document.getElementById('playersGrid');
+      let html = '';
+
+      table.players.forEach((player, idx) => {
+        const seatWind = getSeatWindForPlayer(table, idx);
+        const isDealer = idx === table.dealerIndex;
+        const diff = player.score - table.startScore;
+        const diffColor = diff > 0 ? 'text-emerald-700 bg-emerald-100/80' : diff < 0 ? 'text-mp-red bg-red-100/80' : 'text-slate-600 bg-slate-200/70';
+
+        html += `
+          <div class="bg-mp-cream rounded-2xl gold-border gold-glow p-4 sm:p-5 relative transition ${isDealer ? 'ring-2 ring-mp-red/70' : ''}">
+            <!-- Top Row: Seat Wind Badge + Dealer Tag -->
+            <div class="flex items-center justify-between gap-2 mb-3">
+              <div class="flex items-center gap-2">
+                <div class="w-10 h-10 rounded-xl ${isDealer ? 'bg-mp-red text-white' : 'bg-mp-green text-mp-goldLight'} font-serif font-extrabold text-xl flex items-center justify-center shadow-sm border border-mp-gold/50">
+                  ${seatWind.kanji}
+                </div>
+                <div>
+                  <div class="flex items-center gap-1.5">
+                    <span class="text-xs font-bold uppercase tracking-wider text-mp-goldDark">${seatWind.labelId} (${seatWind.labelEn})</span>
+                    ${isDealer ? '<span class="px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider bg-mp-red text-white rounded-full">Dealer</span>' : ''}
+                  </div>
+                  <!-- Inline Editable Player Name -->
+                  <input
+                    type="text"
+                    value="${escapeHtml(player.name)}"
+                    onchange="updatePlayerName(${idx}, this.value)"
+                    aria-label="Nama Pemain ${idx + 1}"
+                    class="mt-0.5 font-bold text-base sm:text-lg text-mp-green bg-transparent border-b border-transparent hover:border-mp-gold focus:border-mp-green focus:bg-white/70 focus:outline-none px-1 -ml-1 rounded transition w-full max-w-[200px]"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- Middle Row: Large Score Display & Diff Badge -->
+            <div class="bg-white rounded-xl border border-mp-gold/35 px-4 py-3 flex items-baseline justify-between gap-2">
+              <div class="font-mono text-2xl sm:text-3xl font-extrabold tracking-tight text-mp-greenDark">
+                ${formatNumber(player.score)}
+              </div>
+              <span class="px-2.5 py-0.5 rounded-lg text-xs font-bold ${diffColor}">
+                ${formatDiff(diff)}
+              </span>
+            </div>
+
+            <!-- Bottom Row: Quick +/- Adjustment Controls & Set Dealer -->
+            <div class="mt-3 flex items-center justify-between gap-2">
+              <div class="flex items-center gap-1">
+                <button onclick="quickAdjustScore(${idx}, -10)" class="px-2.5 py-1.5 rounded-lg bg-white hover:bg-red-50 text-mp-red border border-mp-gold/40 text-xs font-bold transition active:scale-95">-10</button>
+                <button onclick="quickAdjustScore(${idx}, -1)" class="px-2.5 py-1.5 rounded-lg bg-white hover:bg-red-50 text-mp-red border border-mp-gold/40 text-xs font-bold transition active:scale-95">-1</button>
+                <button onclick="quickAdjustScore(${idx}, 1)" class="px-2.5 py-1.5 rounded-lg bg-white hover:bg-emerald-50 text-emerald-700 border border-mp-gold/40 text-xs font-bold transition active:scale-95">+1</button>
+                <button onclick="quickAdjustScore(${idx}, 10)" class="px-2.5 py-1.5 rounded-lg bg-white hover:bg-emerald-50 text-emerald-700 border border-mp-gold/40 text-xs font-bold transition active:scale-95">+10</button>
+              </div>
+
+              ${
+                !isDealer
+                  ? `<button onclick="setDealer(${idx})" class="text-[11px] font-semibold text-mp-goldDark hover:text-mp-green underline">Jadikan Dealer</button>`
+                  : `<span class="text-[11px] font-bold text-mp-red">★ Dealer Aktif</span>`
+              }
+            </div>
+          </div>
+        `;
+      });
+
+      grid.innerHTML = html;
+    }
+
+    function renderHistory(table) {
+      const container = document.getElementById('historyContainer');
+      if (table.history.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-8 text-slate-500">
+            <p class="text-sm font-semibold">Belum ada ronde yang dicatat di Meja ${table.tableNumber}.</p>
+            <p class="text-xs mt-1">Klik tombol <strong class="text-mp-red">"Catat Ronde / Input Skor"</strong> untuk mulai menghitung skor.</p>
+          </div>
+        `;
+        return;
+      }
+
+      let html = '<div class="space-y-2.5">';
+      [...table.history].reverse().forEach((entry, revIdx) => {
+        const roundNum = table.history.length - revIdx;
+        html += `
+          <div class="bg-white rounded-xl border border-mp-gold/40 p-3 sm:px-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="px-2 py-0.5 rounded bg-mp-green text-white font-bold text-[11px]">#${roundNum} • ${escapeHtml(entry.roundLabel)}</span>
+                <span class="font-bold text-slate-800 text-sm">${escapeHtml(entry.summary)}</span>
+              </div>
+              <div class="text-slate-500 mt-0.5">${escapeHtml(entry.detail)} • <span class="text-[11px]">${entry.time}</span></div>
+            </div>
+            <div class="grid grid-cols-2 sm:flex items-center gap-2 shrink-0">
+              ${entry.deltas
+                .map((d, i) => {
+                  const pName = table.players[i]?.name || `P${i + 1}`;
+                  const cls = d > 0 ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : d < 0 ? 'text-mp-red bg-red-50 border-red-200' : 'text-slate-500 bg-slate-50 border-slate-200';
+                  return `<span class="px-2 py-1 rounded border font-mono font-bold ${cls}">${escapeHtml(pName)}: ${formatDiff(d)}</span>`;
+                })
+                .join('')}
+            </div>
+          </div>
+        `;
+      });
+      html += '</div>';
+      container.innerHTML = html;
+    }
+
+    // =========================================================================
+    // TABLE, MINIMAL TAY & DIRECT CONTROLS
+    // =========================================================================
+    function switchTable(tableNum) {
+      activeTableId = tableNum;
+      saveState();
+      renderAll();
+      showToast(`Beralih ke Meja ${tableNum}`);
+    }
+
+    function adjustMinTay(delta) {
+      const table = getCurrentTable();
+      table.minTay = Math.max(0, (table.minTay || 0) + delta);
+      saveState();
+      renderAll();
+    }
+
+    function setMinTay(val) {
+      const table = getCurrentTable();
+      const parsed = Math.max(0, Math.floor(Number(val) || 0));
+      table.minTay = parsed;
+      saveState();
+      renderAll();
+    }
+
+    function updatePlayerName(playerIdx, newName) {
+      const trimmed = newName.trim();
+      if (!trimmed) return;
+      getCurrentTable().players[playerIdx].name = trimmed;
+      saveState();
+      renderAll();
+    }
+
+    function quickAdjustScore(playerIdx, amount) {
+      const table = getCurrentTable();
+      table.players[playerIdx].score += amount;
+      saveState();
+      renderAll();
+    }
+
+    function setDealer(playerIdx) {
+      const table = getCurrentTable();
+      table.dealerIndex = playerIdx;
+      saveState();
+      renderAll();
+      showToast(`${table.players[playerIdx].name} ditetapkan sebagai Dealer`);
+    }
+
+    function nextRound() {
+      const table = getCurrentTable();
+      table.dealerIndex = (table.dealerIndex + 1) % 4;
+      if (table.roundNumber < 4) {
+        table.roundNumber += 1;
+      } else {
+        table.roundNumber = 1;
+        table.roundWind = (table.roundWind + 1) % 4;
+      }
+      saveState();
+      renderAll();
+    }
+
+    function prevRound() {
+      const table = getCurrentTable();
+      table.dealerIndex = (table.dealerIndex + 3) % 4;
+      if (table.roundNumber > 1) {
+        table.roundNumber -= 1;
+      } else {
+        table.roundNumber = 4;
+        table.roundWind = (table.roundWind + 3) % 4;
+      }
+      saveState();
+      renderAll();
+    }
+
+    function undoLastRound() {
+      const table = getCurrentTable();
+      if (table.history.length === 0) return;
+
+      const last = table.history.pop();
+      if (last.snapshot) {
+        table.roundWind = last.snapshot.roundWind;
+        table.roundNumber = last.snapshot.roundNumber;
+        table.dealerIndex = last.snapshot.dealerIndex;
+        last.snapshot.players.forEach((snapP, idx) => {
+          table.players[idx].score = snapP.score;
+        });
+      }
+      saveState();
+      renderAll();
+      showToast('Ronde terakhir berhasil dibatalkan (Undo)');
+    }
+
+    // =========================================================================
+    // HAND / ROUND MODAL LOGIC (SIMPLIFIED POINT-BASED)
+    // =========================================================================
+    let currentHandType = 'ron'; // 'ron' | 'tsumo' | 'transfer'
+
+    function openHandModal() {
+      const table = getCurrentTable();
+      const windObj = WINDS[table.roundWind];
+      document.getElementById('modalTableBadge').textContent = `MEJA ${table.tableNumber} • ${windObj.labelId.toUpperCase()} ${table.roundNumber}`;
+      document.getElementById('modalMinTayReminder').textContent = `Syarat Minimal: ${table.minTay} Tay`;
+      document.getElementById('handTayInput').value = table.minTay;
+
+      const playerOptions = table.players
+        .map((p, idx) => {
+          const w = getSeatWindForPlayer(table, idx);
+          const dealerTag = idx === table.dealerIndex ? ' [Dealer]' : '';
+          return `<option value="${idx}">${w.kanji} ${escapeHtml(p.name)}${dealerTag}</option>`;
+        })
+        .join('');
+
+      document.getElementById('winnerSelect').innerHTML = playerOptions;
+      document.getElementById('loserSelect').innerHTML = playerOptions;
+      document.getElementById('transferFromSelect').innerHTML = playerOptions;
+      document.getElementById('transferToSelect').innerHTML = playerOptions;
+
+      document.getElementById('winnerSelect').value = '0';
+      document.getElementById('loserSelect').value = '1';
+      document.getElementById('transferFromSelect').value = '0';
+      document.getElementById('transferToSelect').value = '1';
+
+      setHandType('ron');
+      document.getElementById('handModal').classList.remove('hidden');
+    }
+
+    function closeHandModal() {
+      document.getElementById('handModal').classList.add('hidden');
+    }
+
+    function setHandType(type) {
+      currentHandType = type;
+
+      ['ron', 'tsumo', 'transfer'].forEach(t => {
+        const btn = document.getElementById(`typeBtn_${t}`);
+        if (t === type) {
+          btn.className = 'hand-type-btn py-2.5 px-2 rounded-xl border-2 border-mp-green bg-mp-green text-white font-bold text-xs sm:text-sm text-center shadow-sm';
+        } else {
+          btn.className = 'hand-type-btn py-2.5 px-2 rounded-xl border-2 border-mp-gold/40 bg-white text-slate-700 hover:bg-mp-sand font-bold text-xs sm:text-sm text-center transition';
+        }
+      });
+
+      document.getElementById('winFieldsSection').classList.toggle('hidden', type !== 'ron' && type !== 'tsumo');
+      document.getElementById('loserSelectGroup').classList.toggle('hidden', type !== 'ron');
+      document.getElementById('ronPointsInputGroup').classList.toggle('hidden', type !== 'ron');
+      document.getElementById('tsumoPointsInputGroup').classList.toggle('hidden', type !== 'tsumo');
+      document.getElementById('transferFieldsSection').classList.toggle('hidden', type !== 'transfer');
+
+      updateCalculatedPointsPreview();
+    }
+
+    function updateCalculatedPointsPreview() {
+      if (currentHandType !== 'ron' && currentHandType !== 'tsumo') return;
+
+      const table = getCurrentTable();
+      const handTay = Number(document.getElementById('handTayInput').value) || 0;
+      const meetsMinTay = handTay >= table.minTay;
+      const previewBox = document.getElementById('scorePreviewBox');
+
+      const tayStatusHtml = meetsMinTay
+        ? `<span class="text-emerald-700 font-bold">✓ Memenuhi syarat (${handTay} Tay ≥ ${table.minTay} Tay)</span>`
+        : `<span class="text-mp-red font-bold">⚠ Kurang dari syarat minimal (${handTay} Tay < ${table.minTay} Tay)</span>`;
+
+      if (currentHandType === 'ron') {
+        const pts = Math.max(0, Number(document.getElementById('ronPointsInput').value) || 0);
+        previewBox.innerHTML = `
+          <div class="flex justify-between items-center mb-1">${tayStatusHtml}</div>
+          <div class="border-t border-slate-200 pt-1.5 flex justify-between font-extrabold text-sm">
+            <span class="text-emerald-700">Pemenang Terima: +${formatNumber(pts)}</span>
+            <span class="text-mp-red">Yang Kalah Bayar: -${formatNumber(pts)}</span>
+          </div>
+        `;
+      } else {
+        const eachPts = Math.max(0, Number(document.getElementById('tsumoEachPointsInput').value) || 0);
+        const totalWin = eachPts * 3;
+        previewBox.innerHTML = `
+          <div class="flex justify-between items-center mb-1">${tayStatusHtml}</div>
+          <div class="border-t border-slate-200 pt-1.5 flex justify-between font-extrabold text-sm">
+            <span class="text-emerald-700">Total Pemenang Terima: +${formatNumber(totalWin)}</span>
+            <span class="text-mp-red">3 Pemain Lain Bayar: -${formatNumber(eachPts)}</span>
+          </div>
+        `;
+      }
+    }
+
+    function submitHandResult() {
+      const table = getCurrentTable();
+      const autoAdvance = document.getElementById('autoAdvanceCheck').checked;
+      const windObj = WINDS[table.roundWind];
+      const roundLabel = `${windObj.labelId} ${table.roundNumber}`;
+
+      const snapshot = {
+        roundWind: table.roundWind,
+        roundNumber: table.roundNumber,
+        dealerIndex: table.dealerIndex,
+        players: table.players.map(p => ({ score: p.score }))
+      };
+
+      const deltas = [0, 0, 0, 0];
+      let summary = '';
+      let detail = '';
+      let dealerStays = false;
+
+      if (currentHandType === 'ron') {
+        const winnerIdx = Number(document.getElementById('winnerSelect').value);
+        const loserIdx = Number(document.getElementById('loserSelect').value);
+        const handTay = Number(document.getElementById('handTayInput').value) || 0;
+        const pts = Math.max(0, Number(document.getElementById('ronPointsInput').value) || 0);
+
+        if (winnerIdx === loserIdx) {
+          showToast('Pemenang dan yang membuang tidak boleh orang yang sama!', true);
+          return;
+        }
+        if (handTay < table.minTay) {
+          showToast(`Minimal ${table.minTay} Tay untuk bisa Hu! (Input saat ini: ${handTay} Tay)`, true);
+          return;
+        }
+
+        deltas[winnerIdx] = pts;
+        deltas[loserIdx] = -pts;
+
+        summary = `Hu Buangan: ${table.players[winnerIdx].name} dari ${table.players[loserIdx].name}`;
+        detail = `${handTay} Tay • ${formatNumber(pts)} poin`;
+        dealerStays = winnerIdx === table.dealerIndex;
+      } else if (currentHandType === 'tsumo') {
+        const winnerIdx = Number(document.getElementById('winnerSelect').value);
+        const handTay = Number(document.getElementById('handTayInput').value) || 0;
+        const eachPts = Math.max(0, Number(document.getElementById('tsumoEachPointsInput').value) || 0);
+
+        if (handTay < table.minTay) {
+          showToast(`Minimal ${table.minTay} Tay untuk bisa Hu! (Input saat ini: ${handTay} Tay)`, true);
+          return;
+        }
+
+        for (let i = 0; i < 4; i++) {
+          if (i === winnerIdx) {
+            deltas[i] = eachPts * 3;
+          } else {
+            deltas[i] = -eachPts;
+          }
+        }
+
+        summary = `Hu Sendiri: ${table.players[winnerIdx].name}`;
+        detail = `${handTay} Tay • @${formatNumber(eachPts)} poin (Total +${formatNumber(eachPts * 3)})`;
+        dealerStays = winnerIdx === table.dealerIndex;
+      } else if (currentHandType === 'transfer') {
+        const fromIdx = Number(document.getElementById('transferFromSelect').value);
+        const toIdx = Number(document.getElementById('transferToSelect').value);
+        const amount = Math.max(0, Number(document.getElementById('transferAmountInput').value) || 0);
+        const note = document.getElementById('transferNoteInput').value.trim() || 'Transfer langsung';
+
+        if (fromIdx === toIdx) {
+          showToast('Pengirim dan penerima tidak boleh sama!', true);
+          return;
+        }
+
+        deltas[fromIdx] = -amount;
+        deltas[toIdx] = amount;
+        summary = `Transfer: ${table.players[fromIdx].name} → ${table.players[toIdx].name}`;
+        detail = `${formatNumber(amount)} pts (${note})`;
+      }
+
+      // Apply point deltas
+      for (let i = 0; i < 4; i++) {
+        table.players[i].score += deltas[i];
+      }
+
+      // Record History
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+      table.history.push({
+        roundLabel,
+        summary,
+        detail,
+        deltas,
+        time: timeStr,
+        snapshot
+      });
+
+      // Round Progression
+      if (autoAdvance && currentHandType !== 'transfer' && !dealerStays) {
+        advanceDealerAndRound(table);
+      }
+
+      saveState();
+      closeHandModal();
+      renderAll();
+      showToast('Skor ronde berhasil dicatat!');
+    }
+
+    function advanceDealerAndRound(table) {
+      table.dealerIndex = (table.dealerIndex + 1) % 4;
+      if (table.roundNumber < 4) {
+        table.roundNumber += 1;
+      } else {
+        table.roundNumber = 1;
+        table.roundWind = (table.roundWind + 1) % 4;
+      }
+    }
+
+    // =========================================================================
+    // SETTINGS MODAL LOGIC
+    // =========================================================================
+    function openSettingsModal() {
+      const table = getCurrentTable();
+      document.getElementById('settingsTableBadge').textContent = `KONFIGURASI MEJA ${table.tableNumber}`;
+      document.getElementById('setGeneralStartScore').value = table.startScore;
+
+      for (let i = 0; i < 4; i++) {
+        document.getElementById(`setPlayer${i}`).value = table.players[i].name;
+      }
+
+      const dealerSelect = document.getElementById('setDealerIndex');
+      dealerSelect.innerHTML = table.players
+        .map((p, idx) => `<option value="${idx}" ${idx === table.dealerIndex ? 'selected' : ''}>Kursi ${idx + 1}: ${escapeHtml(p.name)}</option>`)
+        .join('');
+
+      document.getElementById('resetScoresOnSaveCheck').checked = false;
+      document.getElementById('settingsModal').classList.remove('hidden');
+    }
+
+    function closeSettingsModal() {
+      document.getElementById('settingsModal').classList.add('hidden');
+    }
+
+    function saveTableSettings() {
+      const table = getCurrentTable();
+      const shouldResetScores = document.getElementById('resetScoresOnSaveCheck').checked;
+      const rawStart = Number(document.getElementById('setGeneralStartScore').value);
+      const generalStart = isNaN(rawStart) ? 0 : rawStart;
+
+      table.startScore = generalStart;
+
+      for (let i = 0; i < 4; i++) {
+        const nameVal = document.getElementById(`setPlayer${i}`).value.trim();
+        if (nameVal) table.players[i].name = nameVal;
+
+        if (shouldResetScores) {
+          table.players[i].score = generalStart;
+        }
+      }
+
+      table.dealerIndex = Number(document.getElementById('setDealerIndex').value);
+
+      if (shouldResetScores) {
+        table.roundWind = 0;
+        table.roundNumber = 1;
+        table.history = [];
+      }
+
+      saveState();
+      closeSettingsModal();
+      renderAll();
+      showToast(`Pengaturan Meja ${table.tableNumber} disimpan`);
+    }
+
+    // =========================================================================
+    // FINAL SUMMARY & CLIPBOARD EXPORT (NO UMA)
+    // =========================================================================
+    function computeStandings(table) {
+      const ranked = table.players
+        .map((p, idx) => ({
+          idx,
+          name: p.name,
+          startScore: table.startScore,
+          rawScore: p.score,
+          netDiff: p.score - table.startScore
+        }))
+        .sort((a, b) => b.netDiff - a.netDiff || b.rawScore - a.rawScore || a.idx - b.idx);
+
+      return ranked.map((item, rankIdx) => ({
+        rank: rankIdx + 1,
+        ...item
+      }));
+    }
+
+    function openSummaryModal() {
+      const table = getCurrentTable();
+      const standings = computeStandings(table);
+      document.getElementById('summaryTableBadge').textContent = `KLASEMEN AKHIR • MEJA ${table.tableNumber}`;
+
+      let rowsHtml = `
+        <table class="w-full text-left border-collapse text-xs sm:text-sm">
+          <thead>
+            <tr class="bg-mp-green text-white">
+              <th class="py-2.5 px-3 rounded-tl-xl">#</th>
+              <th class="py-2.5 px-3">Pemain</th>
+              <th class="py-2.5 px-3 text-right">Poin Awal</th>
+              <th class="py-2.5 px-3 text-right">Skor Akhir</th>
+              <th class="py-2.5 px-3 text-right rounded-tr-xl">Selisih (+/-)</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-mp-gold/30 bg-white">
+      `;
+
+      standings.forEach(s => {
+        const diffCls = s.netDiff > 0 ? 'text-emerald-700' : s.netDiff < 0 ? 'text-mp-red' : 'text-slate-600';
+        const badge = s.rank === 1 ? '🥇' : s.rank === 2 ? '🥈' : s.rank === 3 ? '🥉' : `${s.rank}`;
+        rowsHtml += `
+          <tr>
+            <td class="py-2.5 px-3 font-bold">${badge}</td>
+            <td class="py-2.5 px-3 font-bold text-mp-green">${escapeHtml(s.name)}</td>
+            <td class="py-2.5 px-3 text-right font-mono text-slate-500">${formatNumber(s.startScore)}</td>
+            <td class="py-2.5 px-3 text-right font-mono font-bold text-slate-800">${formatNumber(s.rawScore)}</td>
+            <td class="py-2.5 px-3 text-right font-mono font-extrabold ${diffCls}">${formatDiff(s.netDiff)}</td>
+          </tr>
+        `;
+      });
+
+      rowsHtml += `</tbody></table>`;
+      document.getElementById('standingsTableContainer').innerHTML = rowsHtml;
+      document.getElementById('summaryModal').classList.remove('hidden');
+    }
+
+    function closeSummaryModal() {
+      document.getElementById('summaryModal').classList.add('hidden');
+    }
+
+    function copySummaryToClipboard() {
+      const table = getCurrentTable();
+      const standings = computeStandings(table);
+      const windObj = WINDS[table.roundWind];
+
+      let text = `🀄 *MAHJONG POINT — MEJA ${table.tableNumber}*\n`;
+      text += `Babak: ${windObj.labelId} ${table.roundNumber} | Poin Awal: ${formatNumber(table.startScore)} | Min Hu: ${table.minTay} Tay\n`;
+      text += `────────────────────\n`;
+      standings.forEach(s => {
+        text += `${s.rank}. ${s.name}: ${formatNumber(s.rawScore)} (${formatDiff(s.netDiff)})\n`;
+      });
+      text += `────────────────────\nTotal Ronde Tercatat: ${table.history.length}`;
+
+      const tempInput = document.createElement('textarea');
+      tempInput.value = text;
+      document.body.appendChild(tempInput);
+      tempInput.select();
+      try {
+        document.execCommand('copy');
+        showToast(`Hasil Meja ${table.tableNumber} berhasil disalin!`);
+      } catch (err) {
+        showToast('Gagal menyalin ke clipboard', true);
+      }
+      document.body.removeChild(tempInput);
+    }
+
+    // =========================================================================
+    // RESET TABLE CONFIRMATION
+    // =========================================================================
+    function openResetConfirmModal() {
+      const table = getCurrentTable();
+      document.getElementById('resetModalTableName').textContent = `Meja ${activeTableId}`;
+      document.getElementById('resetModalStartScore').textContent = formatNumber(table.startScore);
+      document.getElementById('resetConfirmModal').classList.remove('hidden');
+    }
+
+    function closeResetConfirmModal() {
+      document.getElementById('resetConfirmModal').classList.add('hidden');
+    }
+
+    function confirmResetTable() {
+      const oldTable = getCurrentTable();
+      const fresh = createDefaultTableState(activeTableId);
+      fresh.minTay = oldTable.minTay;
+      fresh.startScore = oldTable.startScore;
+      fresh.players = oldTable.players.map(p => ({
+        name: p.name,
+        score: oldTable.startScore
+      }));
+
+      tablesState[activeTableId] = fresh;
+      saveState();
+      closeResetConfirmModal();
+      renderAll();
+      showToast(`Meja ${activeTableId} telah di-reset ke ${formatNumber(oldTable.startScore)} poin`);
+    }
+
+    // =========================================================================
+    // UTILITIES (TOAST & XSS ESCAPING)
+    // =========================================================================
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function showToast(message, isError = false) {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `pointer-events-auto px-4 py-2.5 rounded-xl shadow-lg border text-xs sm:text-sm font-bold flex items-center gap-2 transition-all duration-300 ${
+        isError ? 'bg-mp-red text-white border-white/30' : 'bg-mp-greenDark text-white border-mp-gold'
+      }`;
+      toast.innerHTML = `<span>${isError ? '⚠' : '✓'}</span><span>${escapeHtml(message)}</span>`;
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(8px)';
+        setTimeout(() => toast.remove(), 300);
+      }, 2400);
+    }
+
+    // Initialize Application
+    window.addEventListener('DOMContentLoaded', () => {
+      loadState();
+      renderAll();
+    });
+  </script>
+</body>
+</html>
